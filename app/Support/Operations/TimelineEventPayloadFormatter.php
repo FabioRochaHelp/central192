@@ -8,6 +8,8 @@ use App\Domain\Operations\Enums\CallType;
 use App\Domain\Operations\Enums\DispatchStage;
 use App\Domain\Operations\Enums\IncidentReportModality;
 use App\Domain\Operations\Enums\ManchesterRisk;
+use App\Domain\Operations\Enums\RegulationDecision;
+use App\Domain\Operations\Enums\RegulationResource;
 use App\Models\IncidentEvent;
 use App\Models\Vehicle;
 use Illuminate\Support\Str;
@@ -22,6 +24,7 @@ final class TimelineEventPayloadFormatter
     private const HIDDEN_KEYS = [
         'operator_user_id',
         'user_id',
+        'regulator_user_id',
         'shift_id',
         'incident_dispatch_id',
         'victim_id',
@@ -171,8 +174,11 @@ final class TimelineEventPayloadFormatter
         return match ($key) {
             'stage' => DispatchStage::tryFrom((string) $value)?->label() ?? (string) $value,
             'call_type' => CallType::tryFrom((string) $value)?->label() ?? (string) $value,
-            'manchester_risk' => ManchesterRisk::tryFrom((string) $value)?->label() ?? (string) $value,
+            'manchester_risk', 'priority' => ManchesterRisk::tryFrom((string) $value)?->label() ?? (string) $value,
             'modality' => IncidentReportModality::tryFrom((string) $value)?->label() ?? (string) $value,
+            'decision' => RegulationDecision::tryFrom((string) $value)?->label() ?? (string) $value,
+            'recommended_resource' => RegulationResource::tryFrom((string) $value)?->label() ?? (string) $value,
+            'response_time_seconds' => is_numeric($value) ? gmdate('H:i:s', (int) $value) : (string) $value,
             'vehicle_id' => __('Viatura #:id', ['id' => (string) $value]),
             default => self::stringifyScalar($value),
         };
@@ -206,6 +212,10 @@ final class TimelineEventPayloadFormatter
             'talao' => __('Talão'),
             'call_type' => __('Tipo de chamada'),
             'manchester_risk' => __('Classificação Manchester'),
+            'priority' => __('Prioridade'),
+            'decision' => __('Decisão'),
+            'recommended_resource' => __('Recurso indicado'),
+            'response_time_seconds' => __('Tempo-resposta'),
             'note' => __('Observação'),
             'support_dispatch' => __('Empenho de apoio'),
             'stage' => __('Etapa'),

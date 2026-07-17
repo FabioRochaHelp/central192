@@ -17,6 +17,9 @@ final class TimelineEventStyle
     {
         [$icon, $tone] = match ($eventKey) {
             'incident_created' => ['bolt', 'blue'],
+            'regulation_queued' => ['inbox-arrow-down', 'violet'],
+            'regulation_assumed' => ['hand-raised', 'indigo'],
+            'regulation_decided' => ['clipboard-document-check', 'indigo'],
             'dispatch_contact_attempted' => ['phone', 'emerald'],
             'dispatch_contact_failed' => ['phone-x-mark', 'amber'],
             'unit_dispatched' => ['truck', 'indigo'],

@@ -11,6 +11,9 @@ final class TimelineEventLabels
     {
         return match ($key) {
             'incident_created' => 'Ocorrência registrada',
+            'regulation_queued' => 'Enviada para regulação médica',
+            'regulation_assumed' => 'Regulação assumida',
+            'regulation_decided' => 'Regulação concluída',
             'unit_dispatched' => 'Equipe empenhada',
             'dispatch_contact_attempted' => 'Contato pré-despacho registrado',
             'dispatch_contact_failed' => 'Contato pré-despacho falhou',
