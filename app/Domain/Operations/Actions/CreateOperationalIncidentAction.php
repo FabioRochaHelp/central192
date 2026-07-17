@@ -10,6 +10,7 @@ use App\Domain\Operations\Events\IncidentCreated;
 use App\Domain\Operations\Services\IncidentTimelineRecorder;
 use App\Domain\Operations\Services\TalaoIssuer;
 use App\Models\Incident;
+use App\Models\Nature;
 use Illuminate\Support\Facades\DB;
 
 final class CreateOperationalIncidentAction
@@ -27,11 +28,13 @@ final class CreateOperationalIncidentAction
 
             $talao = $this->talaoIssuer->next($occurredAt);
 
+            $initialStatus = $this->resolveInitialStatus($dto->natureId);
+
             $incident = Incident::create([
                 'municipio_id' => $dto->municipioId,
                 'dispatch_year' => (int) $occurredAt->format('Y'),
                 'talao' => $talao,
-                'status' => IncidentStatus::Open,
+                'status' => $initialStatus,
                 'nature_id' => $dto->natureId,
                 'occurred_at' => $occurredAt,
                 'call_received_at' => $callReceivedAt,
@@ -64,9 +67,34 @@ final class CreateOperationalIncidentAction
                 'manchester_risk' => $dto->manchesterRisk?->value,
             ]);
 
+            if ($initialStatus === IncidentStatus::PendingRegulation) {
+                $this->timeline->record($incident, 'regulation_queued', [
+                    'talao' => $talao,
+                ]);
+            }
+
             IncidentCreated::dispatch($incident);
 
             return $incident->fresh();
         });
+    }
+
+    /**
+     * Naturezas de saúde (SAMU) entram na fila de regulação médica antes do despacho;
+     * as demais (Bombeiros/salvamento) seguem direto para a fila de despacho.
+     */
+    private function resolveInitialStatus(?int $natureId): IncidentStatus
+    {
+        if ($natureId === null) {
+            return IncidentStatus::Open;
+        }
+
+        $requiresRegulation = Nature::query()
+            ->whereKey($natureId)
+            ->value('requires_medical_regulation');
+
+        return $requiresRegulation
+            ? IncidentStatus::PendingRegulation
+            : IncidentStatus::Open;
     }
 }

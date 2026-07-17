@@ -15,12 +15,14 @@ class Nature extends Model
         'nature_type_id',
         'name',
         'report_modality',
+        'requires_medical_regulation',
     ];
 
     protected function casts(): array
     {
         return [
             'report_modality' => IncidentReportModality::class,
+            'requires_medical_regulation' => 'boolean',
         ];
     }
 

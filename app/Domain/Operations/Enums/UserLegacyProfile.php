@@ -64,6 +64,8 @@ enum UserLegacyProfile: int
                 ...self::municipalOperationalBase(),
                 'victim.prescribe',
                 'victim.prescription.approve',
+                'regulation.view',
+                'regulation.regulate',
             ],
             self::MunicipalOperator => self::municipalOperationalBase(),
             self::Dispatcher => [

@@ -124,6 +124,11 @@ class Incident extends Model
         return $this->hasOne(IncidentNurseReport::class);
     }
 
+    public function regulation(): HasOne
+    {
+        return $this->hasOne(IncidentRegulation::class);
+    }
+
     public function finalReport(): HasOne
     {
         return $this->hasOne(IncidentFinalReport::class);
