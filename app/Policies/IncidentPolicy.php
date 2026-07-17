@@ -108,6 +108,30 @@ final class IncidentPolicy
         return $user->canAccessOperationalMunicipio($municipioId);
     }
 
+    /** Regulação médica — médico regulador assume/decide enquanto a ocorrência está em regulação. */
+    public function regulate(User $user, Incident $incident): bool
+    {
+        if (! $user->hasOperationalAbility('regulation.regulate')) {
+            return false;
+        }
+
+        if (! $incident->status->isUnderRegulation()) {
+            return false;
+        }
+
+        return $this->viewOperational($user, $incident);
+    }
+
+    /** Ver a fila / registros de regulação (leitura). */
+    public function viewRegulation(User $user, Incident $incident): bool
+    {
+        if (! $user->hasOperationalAbility('regulation.view')) {
+            return false;
+        }
+
+        return $this->viewOperational($user, $incident);
+    }
+
     /** Nova vítima na ocorrência — formulário doc vitima + auxiliares (docs/migracao/banco-dados.md). */
     public function recordVictim(User $user, Incident $incident): bool
     {

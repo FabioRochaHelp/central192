@@ -86,6 +86,16 @@
                                 {{ __('Ocorrências') }}
                             </flux:sidebar.item>
                         @endif
+                        @if (auth()->user()?->hasOperationalAbility('regulation.view'))
+                            <flux:sidebar.item
+                                icon="clipboard-document-check"
+                                :href="route('operations.incidents.regulation.index')"
+                                :current="request()->routeIs('operations.incidents.regulation.index') || request()->routeIs('operations.incidents.regulation')"
+                                wire:navigate
+                            >
+                                {{ __('Regulação') }}
+                            </flux:sidebar.item>
+                        @endif
                         @if (auth()->user()?->hasOperationalAbility('incident.create'))
                             <flux:sidebar.item
                                 icon="plus-circle"

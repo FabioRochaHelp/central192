@@ -41,6 +41,8 @@ use App\Livewire\Operations\Parameters\NatureParameterManage;
 use App\Livewire\Operations\Parameters\OperationalSupportParameterManage;
 use App\Livewire\Operations\Parameters\ProcedureParameterManage;
 use App\Livewire\Operations\Parameters\VictimTypeParameterManage;
+use App\Livewire\Operations\Regulation\RegulationForm;
+use App\Livewire\Operations\Regulation\RegulationQueue;
 use App\Livewire\Operations\Reports\FireFocosReport;
 use App\Livewire\Operations\Reports\IncidentReport;
 use App\Livewire\Operations\StaffManage;
@@ -133,6 +135,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/incidents/{incident}/victims/{victim}/edit', VictimRecord::class)->name('operations.incidents.victims.edit');
             Route::get('/victims/{victim}/prescriptions/create', PrescriptionForm::class)->name('operations.victims.prescriptions.create');
             Route::get('/prescriptions/{prescription}/approval', PrescriptionApproval::class)->name('operations.prescriptions.approval');
+            Route::get('/regulation', RegulationQueue::class)->name('operations.incidents.regulation.index');
+            Route::get('/incidents/{incident}/regulation', RegulationForm::class)->name('operations.incidents.regulation');
             Route::get('/incidents/{incident}/nurse-report', IncidentNurseReport::class)->name('operations.incidents.nurse-report');
             Route::get('/incidents/{incident}/final-report', IncidentFinalReport::class)->name('operations.incidents.final-report');
             Route::get('/incidents/{incident}/final-report/document', IncidentFinalReportDocumentController::class)->name('operations.incidents.final-report.document');

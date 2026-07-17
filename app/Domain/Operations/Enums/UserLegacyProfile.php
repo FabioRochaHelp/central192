@@ -20,7 +20,7 @@ enum UserLegacyProfile: int
             self::CentralAdministrator => __('Administrador central'),
             self::CentralOperator => __('Operador central'),
             self::Nurse => __('Enfermeiro (relatório pós-ocorrência)'),
-            self::Doctor => __('Médico (prescrição)'),
+            self::Doctor => __('Médico regulador'),
             self::MunicipalOperator => __('Operador municipal'),
             self::Dispatcher => __('Despachador'),
             self::Attendant => __('Atendente'),
@@ -34,7 +34,8 @@ enum UserLegacyProfile: int
 
     public function hasMultiMunicipioAccess(): bool
     {
-        return $this->isCentral() || in_array($this, [self::Dispatcher, self::Attendant], true);
+        // Médico regulador atua sobre todos os municípios da regulação regional.
+        return $this->isCentral() || in_array($this, [self::Doctor, self::Dispatcher, self::Attendant], true);
     }
 
     public function requiresMunicipio(): bool

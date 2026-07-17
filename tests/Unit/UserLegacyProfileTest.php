@@ -35,6 +35,11 @@ test('dispatcher and attendant profiles have multi municipio access', function (
         ->and(UserLegacyProfile::MunicipalOperator->requiresMunicipio())->toBeTrue();
 });
 
+test('médico regulador atua sobre todos os municípios', function (): void {
+    expect(UserLegacyProfile::Doctor->hasMultiMunicipioAccess())->toBeTrue()
+        ->and(UserLegacyProfile::Doctor->requiresMunicipio())->toBeFalse();
+});
+
 test('multi municipio users can access any municipio', function (): void {
     $dispatcher = User::factory()->make([
         'users_type_legacy' => UserLegacyProfile::Dispatcher->value,
