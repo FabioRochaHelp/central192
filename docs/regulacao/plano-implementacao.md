@@ -228,13 +228,16 @@ regulação, DispatchBoard e detalhe atualizem sem reload (padrão atual da base
 
 ## 12. Fases de entrega
 
-| Fase | Escopo | Entregável |
-|------|--------|-----------|
-| **1 — Núcleo de dados** | Migrations (`natures.requires_medical_regulation`, `incident_regulations`), enums, model `IncidentRegulation`, abilities, ajuste de `CreateOperationalIncidentAction`. | Ocorrência nasce no status correto; testes de status. |
-| **2 — Regulação (médico)** | Actions/DTOs, `RegulationQueue`, `RegulationForm`, rotas, item de sidebar, tempo real. | Médico assume e decide; ocorrência flui para despacho. |
-| **3 — Visibilidade** | Bloco de regulação no detalhe da ocorrência; badges/contadores na DispatchBoard. | Registro do médico visível na ocorrência. |
-| **4 — Relatórios** | Ficha PDF por ocorrência + relatório gerencial com KPIs. | Telas e documentos de relatório. |
-| **5 — Refino** | Cronômetros, ordenação por prioridade, ajustes de UX, cobertura de testes. | Módulo pronto para produção. |
+| Fase | Escopo | Status |
+|------|--------|--------|
+| **1 — Núcleo de dados** | Migrations (`natures.requires_medical_regulation`, `incident_regulations`), enums, model `IncidentRegulation`, abilities, ajuste de `CreateOperationalIncidentAction`. | ✅ concluída |
+| **2 — Regulação (médico)** | Actions/DTOs, `RegulationQueue`, `RegulationForm`, rotas, item de sidebar, tempo real. | ✅ concluída |
+| **3 — Visibilidade** | Bloco de regulação no detalhe da ocorrência; badge do recurso na DispatchBoard. | ✅ concluída |
+| **4 — Relatórios** | Ficha PDF por ocorrência + relatório gerencial com KPIs + CSV. | ✅ concluída |
+| **5 — Refino (opcional)** | Cronômetros na fila, ordenação por prioridade, gráficos no relatório, mais cobertura. | pendente |
+
+> **Nota de escopo (decisão do cliente):** o perfil Médico (`Doctor`) passou a ter acesso
+> multi-município — o médico regulador atua sobre **todos os municípios** da regulação regional.
 
 ## 13. Decisões validadas (2026-07-17)
 
