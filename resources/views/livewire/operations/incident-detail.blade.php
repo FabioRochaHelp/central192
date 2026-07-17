@@ -152,11 +152,19 @@
         <flux:card class="border-s-4 border-s-indigo-500 dark:border-s-indigo-400 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <flux:subheading>{{ __('Regulação médica') }}</flux:subheading>
-                @if ($reg->status)
-                    <flux:badge :color="$reg->status->authorizesDispatch() ? 'green' : 'zinc'">
-                        {{ $reg->status->label() }}
-                    </flux:badge>
-                @endif
+                <div class="flex items-center gap-2">
+                    @if ($reg->status)
+                        <flux:badge :color="$reg->status->authorizesDispatch() ? 'green' : 'zinc'">
+                            {{ $reg->status->label() }}
+                        </flux:badge>
+                    @endif
+                    @can('viewRegulation', $incident)
+                        <flux:button size="sm" variant="ghost" icon="document-arrow-down"
+                            :href="route('operations.incidents.regulation.document', $incident)" target="_blank">
+                            {{ __('Ficha PDF') }}
+                        </flux:button>
+                    @endcan
+                </div>
             </div>
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div>

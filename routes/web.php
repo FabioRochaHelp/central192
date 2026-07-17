@@ -7,6 +7,7 @@ use App\Http\Controllers\Operations\IbgeMunicipioGeoJsonController;
 use App\Http\Controllers\Operations\IncidentCallIntakeWebhookController;
 use App\Http\Controllers\Operations\IncidentFinalReportDocumentController;
 use App\Http\Controllers\Operations\IncidentNearestVehicleController;
+use App\Http\Controllers\Operations\IncidentRegulationDocumentController;
 use App\Http\Controllers\Operations\IncidentRouteController;
 use App\Http\Controllers\Operations\MapVehiclesController;
 use App\Http\Controllers\Operations\MapWindController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Operations\MunicipiosGeoJsonController;
 use App\Http\Controllers\Operations\PlayIncidentRecordingController;
 use App\Http\Controllers\Operations\Reports\FireScarAnalysisDocumentController;
 use App\Http\Controllers\Operations\Reports\IncidentReportDocumentController;
+use App\Http\Controllers\Operations\Reports\RegulationReportDocumentController;
 use App\Http\Controllers\ScreenLockController;
 use App\Livewire\Dashboard;
 use App\Livewire\FireFocosMap;
@@ -45,6 +47,7 @@ use App\Livewire\Operations\Regulation\RegulationForm;
 use App\Livewire\Operations\Regulation\RegulationQueue;
 use App\Livewire\Operations\Reports\FireFocosReport;
 use App\Livewire\Operations\Reports\IncidentReport;
+use App\Livewire\Operations\Reports\RegulationReport;
 use App\Livewire\Operations\StaffManage;
 use App\Livewire\Operations\TacticalMap;
 use App\Livewire\Operations\VehicleManage;
@@ -106,6 +109,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/cicatrizes/{fireScarAnalysis}/document', FireScarAnalysisDocumentController::class)->name('operations.reports.fire-scars.document');
         });
 
+    // Relatório de regulação: acessível ao médico regulador (regulation.view), não só à central.
+    Route::middleware(['operational.tenant'])
+        ->prefix('operations/relatorios')
+        ->group(function (): void {
+            Route::get('/regulacao', RegulationReport::class)->name('operations.reports.regulation.index');
+            Route::get('/regulacao/document', RegulationReportDocumentController::class)->name('operations.reports.regulation.document');
+        });
+
     Route::middleware(['operational.tenant'])
         ->prefix('operations/cadastro')
         ->group(function (): void {
@@ -137,6 +148,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/prescriptions/{prescription}/approval', PrescriptionApproval::class)->name('operations.prescriptions.approval');
             Route::get('/regulation', RegulationQueue::class)->name('operations.incidents.regulation.index');
             Route::get('/incidents/{incident}/regulation', RegulationForm::class)->name('operations.incidents.regulation');
+            Route::get('/incidents/{incident}/regulation/document', IncidentRegulationDocumentController::class)->name('operations.incidents.regulation.document');
             Route::get('/incidents/{incident}/nurse-report', IncidentNurseReport::class)->name('operations.incidents.nurse-report');
             Route::get('/incidents/{incident}/final-report', IncidentFinalReport::class)->name('operations.incidents.final-report');
             Route::get('/incidents/{incident}/final-report/document', IncidentFinalReportDocumentController::class)->name('operations.incidents.final-report.document');

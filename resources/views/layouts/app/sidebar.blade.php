@@ -217,6 +217,33 @@
                         >
                             {{ __('Cicatrizes de incêndio') }}
                         </flux:sidebar.item>
+                        <flux:sidebar.item
+                            icon="clipboard-document-check"
+                            :href="route('operations.reports.regulation.index')"
+                            :current="request()->routeIs('operations.reports.regulation.*')"
+                            wire:navigate
+                        >
+                            {{ __('Regulação médica') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+
+                @elseif (auth()->user()?->hasOperationalAbility('regulation.view'))
+                    {{-- Médico regulador (não-central) acessa apenas o relatório de regulação. --}}
+                    <flux:sidebar.group
+                        expandable
+                        :expanded="request()->routeIs('operations.reports.regulation.*')"
+                        icon="chart-bar"
+                        :heading="__('Relatórios')"
+                        class="grid"
+                    >
+                        <flux:sidebar.item
+                            icon="clipboard-document-check"
+                            :href="route('operations.reports.regulation.index')"
+                            :current="request()->routeIs('operations.reports.regulation.*')"
+                            wire:navigate
+                        >
+                            {{ __('Regulação médica') }}
+                        </flux:sidebar.item>
                     </flux:sidebar.group>
 
                     <flux:sidebar.group
