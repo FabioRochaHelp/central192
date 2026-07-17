@@ -1,0 +1,5 @@
+*
+!public/
+!ibge/
+!ibge/**
+!.gitignore
