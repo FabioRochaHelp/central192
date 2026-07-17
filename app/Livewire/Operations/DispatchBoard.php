@@ -977,7 +977,7 @@ final class DispatchBoard extends Component
         $mid = OperationalMunicipioSelection::current(Auth::user());
 
         $openIncidentsQuery = Incident::query()
-            ->with(['nature', 'municipio'])
+            ->with(['nature', 'municipio', 'regulation'])
             ->withCount('callRequests')
             ->where('status', IncidentStatus::Open);
 

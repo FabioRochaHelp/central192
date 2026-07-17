@@ -30,6 +30,7 @@ final class IncidentOperationalDetail extends Component
         $this->incident = $incident->load([
             'nature',
             'operationalCallAlerts',
+            'regulation.regulator',
             'nurseReport.filledBy',
             'finalReport.filledBy',
             'victims.prescriptions.items',
@@ -50,6 +51,7 @@ final class IncidentOperationalDetail extends Component
         $this->incident->load([
             'nature',
             'operationalCallAlerts',
+            'regulation.regulator',
             'nurseReport.filledBy',
             'finalReport.filledBy',
             'victims.prescriptions.items',

@@ -176,6 +176,25 @@ test('formulário exige recurso quando a decisão é enviar', function (): void 
         ->assertHasErrors('recommended_resource');
 });
 
+test('detalhe da ocorrência exibe o registro da regulação', function (): void {
+    $incident = regulationIncident();
+    app(AssumeRegulationAction::class)->execute($incident->id, medico());
+    app(RegisterRegulationDecisionAction::class)->execute(new RegulationDecisionDTO(
+        incidentId: $incident->id,
+        regulatorUserId: medico()->id,
+        decision: RegulationDecision::DispatchResource,
+        priority: ManchesterRisk::Orange,
+        diagnosticHypothesis: 'Suspeita de SCA',
+        recommendedResource: RegulationResource::Usa,
+    ));
+
+    Livewire::actingAs(medico())
+        ->test(\App\Livewire\Operations\IncidentOperationalDetail::class, ['incident' => $incident->fresh()])
+        ->assertSee(__('Regulação médica'))
+        ->assertSee(medico()->name)
+        ->assertSee('Suspeita de SCA');
+});
+
 test('despachador não pode regular', function (): void {
     $incident = regulationIncident();
 

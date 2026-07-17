@@ -71,7 +71,16 @@
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-slate-600 dark:text-slate-400">{{ $incident->occurred_at->format('d/m/Y H:i') }}</td>
                             <td class="max-w-[18rem] truncate px-4 py-3 text-slate-700 dark:text-slate-300">{{ $incident->address_line ?? '—' }}</td>
-                            <td class="max-w-[14rem] truncate px-4 py-3 text-slate-700 dark:text-slate-300">{{ $incident->nature?->name ?? '—' }}</td>
+                            <td class="max-w-[14rem] px-4 py-3 text-slate-700 dark:text-slate-300">
+                                <div class="flex items-center gap-2">
+                                    <span class="truncate">{{ $incident->nature?->name ?? '—' }}</span>
+                                    @if ($incident->regulation?->recommended_resource)
+                                        <flux:badge size="sm" color="indigo" title="{{ __('Recurso indicado na regulação') }}">
+                                            {{ $incident->regulation->recommended_resource->value ? strtoupper($incident->regulation->recommended_resource->value) : '' }}
+                                        </flux:badge>
+                                    @endif
+                                </div>
+                            </td>
                             <td class="whitespace-nowrap px-4 py-3">
                                 <x-incident.manchester-badge :risk="$incident->manchester_risk" :showPrefix="false" />
                             </td>

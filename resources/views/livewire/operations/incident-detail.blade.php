@@ -146,6 +146,76 @@
     </flux:card>
 
     @php
+        $reg = $incident->regulation;
+    @endphp
+    @if ($reg && $reg->decided_at)
+        <flux:card class="border-s-4 border-s-indigo-500 dark:border-s-indigo-400 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <flux:subheading>{{ __('Regulação médica') }}</flux:subheading>
+                @if ($reg->status)
+                    <flux:badge :color="$reg->status->authorizesDispatch() ? 'green' : 'zinc'">
+                        {{ $reg->status->label() }}
+                    </flux:badge>
+                @endif
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div>
+                    <flux:text class="text-xs uppercase text-zinc-500">{{ __('Médico regulador') }}</flux:text>
+                    <flux:text class="font-medium">{{ $reg->regulator?->name ?? '—' }}</flux:text>
+                </div>
+                <div>
+                    <flux:text class="text-xs uppercase text-zinc-500">{{ __('Prioridade') }}</flux:text>
+                    <flux:text class="font-medium">
+                        @if ($reg->priority)
+                            <flux:badge size="sm" :color="$reg->priority->fluxColor()">{{ $reg->priority->label() }}</flux:badge>
+                        @else — @endif
+                    </flux:text>
+                </div>
+                @if ($reg->recommended_resource)
+                    <div>
+                        <flux:text class="text-xs uppercase text-zinc-500">{{ __('Recurso indicado') }}</flux:text>
+                        <flux:text class="font-medium">{{ $reg->recommended_resource->label() }}</flux:text>
+                    </div>
+                @endif
+                <div>
+                    <flux:text class="text-xs uppercase text-zinc-500">{{ __('Regulada em') }}</flux:text>
+                    <flux:text class="font-medium tabular-nums">{{ $reg->decided_at->format('d/m/Y H:i') }}</flux:text>
+                </div>
+                @if ($reg->response_time_seconds !== null)
+                    <div>
+                        <flux:text class="text-xs uppercase text-zinc-500">{{ __('Tempo-resposta') }}</flux:text>
+                        <flux:text class="font-medium tabular-nums">{{ gmdate('H:i:s', $reg->response_time_seconds) }}</flux:text>
+                    </div>
+                @endif
+            </div>
+            @if ($reg->diagnostic_hypothesis)
+                <div>
+                    <flux:text class="text-xs uppercase text-zinc-500">{{ __('Hipótese diagnóstica') }}</flux:text>
+                    <flux:text class="whitespace-pre-line">{{ $reg->diagnostic_hypothesis }}</flux:text>
+                </div>
+            @endif
+            @if ($reg->guidance_notes)
+                <div>
+                    <flux:text class="text-xs uppercase text-zinc-500">{{ __('Orientações') }}</flux:text>
+                    <flux:text class="whitespace-pre-line">{{ $reg->guidance_notes }}</flux:text>
+                </div>
+            @endif
+            @if ($reg->transfer_target)
+                <div>
+                    <flux:text class="text-xs uppercase text-zinc-500">{{ __('Destino da transferência') }}</flux:text>
+                    <flux:text class="font-medium">{{ $reg->transfer_target }}</flux:text>
+                </div>
+            @endif
+            @if ($reg->refusal_reason)
+                <div>
+                    <flux:text class="text-xs uppercase text-zinc-500">{{ __('Motivo da recusa') }}</flux:text>
+                    <flux:text class="whitespace-pre-line">{{ $reg->refusal_reason }}</flux:text>
+                </div>
+            @endif
+        </flux:card>
+    @endif
+
+    @php
         $activeDispatches = $incident->dispatches->whereNull('deleted_at');
     @endphp
 
