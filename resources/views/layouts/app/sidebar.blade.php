@@ -245,7 +245,9 @@
                             {{ __('Regulação médica') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
+                @endif
 
+                @if (auth()->user()?->isOperationalCentral())
                     <flux:sidebar.group
                         expandable
                         :expanded="request()->routeIs('operations.parameters.*')"
