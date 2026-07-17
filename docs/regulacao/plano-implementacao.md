@@ -70,9 +70,11 @@ cria ocorrência ─► PENDING_REGULATION ─► IN_REGULATION ─┬─► OPE
 O sistema também atende Bombeiros/Incêndio/Salvamento (modalidades de relatório distintas em
 `Nature.report_modality`). Regulação médica só faz sentido para naturezas de saúde (SAMU).
 
-**Recomendação**: adicionar flag `requires_medical_regulation` (boolean) na tabela `natures`.
-- Natureza com flag = ocorrência nasce em `PENDING_REGULATION`.
-- Natureza sem flag (incêndio, salvamento) = nasce em `OPEN` (fluxo atual, sem mudança).
+**Implementado**: o gatilho é a **modalidade SAMU** da natureza (`Nature.report_modality === Samu`).
+- Natureza de modalidade **SAMU** = ocorrência nasce em `PENDING_REGULATION`.
+- Natureza de outra modalidade (incêndio, salvamento) = nasce em `OPEN` (fluxo atual, sem mudança).
+- A flag boolean `natures.requires_medical_regulation` permanece como **override manual**
+  (força regulação numa natureza de outra modalidade), via `Nature::requiresMedicalRegulation()`.
 
 Isso mantém o módulo cirúrgico e não afeta o fluxo dos Bombeiros.
 

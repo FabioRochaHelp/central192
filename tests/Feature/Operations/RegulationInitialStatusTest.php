@@ -60,6 +60,23 @@ test('natureza que exige regulação nasce aguardando regulação', function ():
     expect($queued)->toBeTrue();
 });
 
+test('natureza de modalidade SAMU nasce aguardando regulação', function (): void {
+    /** @var User $user */
+    $user = User::query()->where('email', 'municipal@example.com')->firstOrFail();
+
+    /** @var Nature $nature */
+    $nature = Nature::query()->firstOrFail();
+    $nature->update([
+        'requires_medical_regulation' => false,
+        'report_modality' => \App\Domain\Operations\Enums\IncidentReportModality::Samu,
+    ]);
+
+    $incident = app(CreateOperationalIncidentAction::class)
+        ->execute(makeIncidentDTO($nature->id, $user->municipio_id));
+
+    expect($incident->status)->toBe(IncidentStatus::PendingRegulation);
+});
+
 test('natureza sem regulação nasce aberta e vai direto ao despacho', function (): void {
     /** @var User $user */
     $user = User::query()->where('email', 'municipal@example.com')->firstOrFail();

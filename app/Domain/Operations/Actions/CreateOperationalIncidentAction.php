@@ -89,11 +89,9 @@ final class CreateOperationalIncidentAction
             return IncidentStatus::Open;
         }
 
-        $requiresRegulation = Nature::query()
-            ->whereKey($natureId)
-            ->value('requires_medical_regulation');
+        $nature = Nature::query()->find($natureId);
 
-        return $requiresRegulation
+        return $nature !== null && $nature->requiresMedicalRegulation()
             ? IncidentStatus::PendingRegulation
             : IncidentStatus::Open;
     }

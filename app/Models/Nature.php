@@ -43,4 +43,15 @@ class Nature extends Model
             IncidentReportModality::FireBuilding,
         ], true);
     }
+
+    /**
+     * Ocorrências desta natureza passam por regulação médica antes do despacho.
+     * Disparado pela modalidade SAMU; o boolean `requires_medical_regulation`
+     * funciona como override manual para naturezas de outra modalidade.
+     */
+    public function requiresMedicalRegulation(): bool
+    {
+        return $this->report_modality === IncidentReportModality::Samu
+            || (bool) $this->requires_medical_regulation;
+    }
 }
