@@ -6,6 +6,9 @@
 @php
     /** @var \App\Domain\Operations\Enums\IncidentStatus $status */
     $color = match ($status) {
+        \App\Domain\Operations\Enums\IncidentStatus::PendingRegulation => 'purple',
+        \App\Domain\Operations\Enums\IncidentStatus::InRegulation => 'indigo',
+        \App\Domain\Operations\Enums\IncidentStatus::RegulationDenied => 'zinc',
         \App\Domain\Operations\Enums\IncidentStatus::Open => 'blue',
         \App\Domain\Operations\Enums\IncidentStatus::Dispatched, \App\Domain\Operations\Enums\IncidentStatus::InProgress => 'cyan',
         \App\Domain\Operations\Enums\IncidentStatus::PendingNurseReport => 'amber',
