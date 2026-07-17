@@ -10,13 +10,11 @@ use App\Models\FireBuildingReport;
 use App\Models\FireForestReport;
 use App\Models\FireScarAnalysis;
 use App\Models\Incident;
-use App\Models\IncidentEvent;
 use App\Models\IncidentFinalReport;
 use App\Models\OperationalSupport;
 use App\Models\RescueAnimalReport;
 use App\Models\RescueInsectReport;
 use App\Models\RescueOtherReport;
-use App\Models\Vehicle;
 use Illuminate\Support\Collection;
 
 /** Monta os dados consolidados do relatório final CB para impressão/download. */
@@ -156,78 +154,6 @@ final class IncidentFinalReportDocument
             fn (array $observation): string => $observation['title'].': '.$observation['text'],
             $report['observations'],
         );
-    }
-
-    public function hasDispatchContactAttempts(): bool
-    {
-        return $this->dispatchContactAttempts() !== [];
-    }
-
-    /**
-     * Registros de contato pré-despacho (antes do empenho da viatura), em ordem cronológica.
-     *
-     * @return list<array{result: string, successful: bool, method: string, details: string, vehicle: string, vehicle_base: string, reason: string, recorded_at: string, actor: string}>
-     */
-    public function dispatchContactAttempts(): array
-    {
-        return once(function (): array {
-            $events = IncidentEvent::query()
-                ->withoutGlobalScopes()
-                ->with('actor')
-                ->where('incident_id', $this->incident->id)
-                ->whereIn('event_key', ['dispatch_contact_attempted', 'dispatch_contact_failed'])
-                ->orderBy('recorded_at')
-                ->get();
-
-            if ($events->isEmpty()) {
-                return [];
-            }
-
-            $vehicleIds = $events
-                ->map(fn (IncidentEvent $event): mixed => $event->payload['vehicle_id'] ?? null)
-                ->filter()
-                ->unique()
-                ->values();
-
-            $vehicles = $vehicleIds->isEmpty()
-                ? collect()
-                : Vehicle::query()
-                    ->withoutGlobalScopes()
-                    ->with('municipio')
-                    ->whereIn('id', $vehicleIds)
-                    ->get()
-                    ->keyBy('id');
-
-            return $events->map(function (IncidentEvent $event) use ($vehicles): array {
-                $payload = $event->payload ?? [];
-                $successful = (bool) ($payload['successful'] ?? false);
-                $vehicleId = $payload['vehicle_id'] ?? null;
-                $vehicle = $vehicleId !== null ? $vehicles->get($vehicleId) : null;
-
-                return [
-                    'result' => $successful ? __('Contato efetuado') : __('Não foi possível contatar'),
-                    'successful' => $successful,
-                    'method' => $this->contactMethodLabel((string) ($payload['contact_method'] ?? '')),
-                    'details' => ((string) ($payload['contact_details'] ?? '')) ?: '—',
-                    'vehicle' => $vehicle?->prefix
-                        ?? ($vehicleId !== null ? __('Viatura #:id', ['id' => $vehicleId]) : '—'),
-                    'vehicle_base' => $vehicle?->municipio?->razao_social ?? '—',
-                    'reason' => ((string) ($payload['reason'] ?? '')) ?: '—',
-                    'recorded_at' => $event->recorded_at?->format('d/m/Y H:i') ?? '—',
-                    'actor' => $event->actor?->name ?? '—',
-                ];
-            })->all();
-        });
-    }
-
-    private function contactMethodLabel(string $method): string
-    {
-        return match ($method) {
-            'ramal' => __('Ramal'),
-            'telefone' => __('Telefone'),
-            'whatsapp' => __('WhatsApp'),
-            default => $method !== '' ? $method : '—',
-        };
     }
 
     /** @return list<array{vehicle: string, shift_period: string, staff: list<string>, stage: string}> */

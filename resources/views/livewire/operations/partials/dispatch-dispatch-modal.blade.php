@@ -188,102 +188,6 @@
                     </div>
                 @endif
 
-                <div class="space-y-4 rounded-2xl border border-slate-200/90 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-                    <div class="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                            <flux:subheading>{{ __('Registro de contato pré-despacho') }}</flux:subheading>
-                            <flux:text size="sm" class="text-slate-500 dark:text-slate-400">
-                                {{ __('Registre o contato antes de empenhar a viatura mais próxima. Se não for possível, informe o motivo e acione o responsável pela viatura indicada.') }}
-                            </flux:text>
-                        </div>
-                        @if ($modalShifts->isNotEmpty())
-                            @php $nearestShift = $modalShifts->first(); @endphp
-                            <div class="space-y-1 text-right text-sm text-slate-600 dark:text-slate-300">
-                                <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 dark:bg-slate-800">
-                                    {{ __('Mais próxima:') }} {{ $nearestShift->vehicle?->prefix ?? __('Sem prefixo') }}
-                                </span>
-                                @if ($nearestShift->staff->isNotEmpty())
-                                    <span>{{ __('Responsável:') }} {{ $nearestShift->staff->pluck('name')->join(', ') }}</span>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
-
-                    <div
-                        class="grid gap-4 sm:grid-cols-2"
-                        x-data="{
-                            method: @entangle('dispatchContactMethod'),
-                            vehicleId: @entangle('modalVehicleId'),
-                            details: @entangle('dispatchContactDetails'),
-                            suggestions: @js($modalContactSuggestions),
-                            suggestion() {
-                                const base = this.suggestions[this.vehicleId];
-                                return base && this.method ? (base[this.method] ?? null) : null;
-                            },
-                            applySuggestion() {
-                                const value = this.suggestion();
-                                if (value) {
-                                    this.details = value;
-                                }
-                            },
-                        }"
-                        x-init="
-                            $watch('method', () => applySuggestion());
-                            $watch('vehicleId', () => applySuggestion());
-                        "
-                    >
-                        <flux:select wire:model.live="dispatchContactMethod" :label="__('Método de contato')" placeholder="{{ __('Selecione') }}">
-                            @foreach (App\Livewire\Operations\DispatchBoard::DISPATCH_CONTACT_METHODS as $method => $label)
-                                <flux:select.option value="{{ $method }}">{{ $label }}</flux:select.option>
-                            @endforeach
-                        </flux:select>
-
-                        <div>
-                            <flux:input x-model="details" :label="__('Número / ramal / link')" placeholder="{{ __('Ex: 192, 99888-7777 ou wa.me/...') }}" />
-                            <template x-if="suggestion() && details === suggestion()">
-                                <flux:text size="xs" class="mt-1 text-emerald-600 dark:text-emerald-400">
-                                    ✓ {{ __('Sugestão da base da viatura (pré-preenchida)') }}
-                                </flux:text>
-                            </template>
-                            <template x-if="suggestion() && details !== suggestion()">
-                                <flux:text size="xs" class="mt-1 text-slate-500 dark:text-slate-400">
-                                    {{ __('Sugestão da base:') }} <span x-text="suggestion()"></span>
-                                </flux:text>
-                            </template>
-                        </div>
-                    </div>
-
-                    <div class="grid gap-3 sm:grid-cols-2">
-                        <div class="space-y-2">
-                            <flux:text class="font-medium text-slate-700 dark:text-slate-200">{{ __('Resultado do contato') }}</flux:text>
-                            <div class="grid gap-2 sm:grid-cols-2">
-                                <label class="flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 py-3 text-sm text-slate-700 transition hover:border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                                    <input type="radio" name="dispatchContactSuccessful" value="1" wire:model.live="dispatchContactSuccessful" class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
-                                    {{ __('Contato efetuado') }}
-                                </label>
-                                <label class="flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 py-3 text-sm text-slate-700 transition hover:border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                                    <input type="radio" name="dispatchContactSuccessful" value="0" wire:model.live="dispatchContactSuccessful" class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
-                                    {{ __('Não foi possível contatar') }}
-                                </label>
-                            </div>
-                        </div>
-
-                        @if (! $dispatchContactSuccessful)
-                            <flux:textarea wire:model.live="dispatchContactReason" :label="__('Motivo')" rows="4" placeholder="{{ __('Ex: ocupada, não atende, número inválido') }}" />
-                        @endif
-                    </div>
-
-                    @error('dispatchContactMethod')
-                        <flux:callout variant="danger">{{ $message }}</flux:callout>
-                    @enderror
-                    @error('dispatchContactDetails')
-                        <flux:callout variant="danger">{{ $message }}</flux:callout>
-                    @enderror
-                    @error('dispatchContactReason')
-                        <flux:callout variant="danger">{{ $message }}</flux:callout>
-                    @enderror
-                </div>
-
                 <div class="flex flex-wrap justify-end gap-2 border-t border-slate-200/90 pt-4 dark:border-slate-800">
                     <flux:modal.close>
                         <flux:button variant="outline" type="button" class="min-w-28">
@@ -301,7 +205,7 @@
                             wire:loading.attr="disabled"
                             class="min-w-40 opacity-60"
                         >
-                            {{ __('Registrar contato') }}
+                            {{ $dispatchModalIsSupport ? __('Empenhar apoio') : __('Empenhar viatura') }}
                         </flux:button>
                     @else
                         <flux:button
@@ -313,7 +217,7 @@
                             wire:loading.attr="disabled"
                             class="min-w-40"
                         >
-                            {{ $dispatchContactSuccessful ? __('Confirmar contato e empenhar') : __('Registrar tentativa sem empenho') }}
+                            {{ $dispatchModalIsSupport ? __('Empenhar apoio') : __('Empenhar viatura') }}
                         </flux:button>
                     @endif
                 </div>

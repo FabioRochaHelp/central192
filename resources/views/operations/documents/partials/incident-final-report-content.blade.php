@@ -43,31 +43,6 @@
         </section>
     @endif
 
-    @if ($document->hasDispatchContactAttempts())
-        <section class="rpt-section">
-            <h2 class="rpt-section-head">{{ __('Contato pré-despacho') }}</h2>
-            @foreach ($document->dispatchContactAttempts() as $contact)
-                <div class="rpt-unit-card">
-                    <div class="rpt-unit-head">{{ $contact['result'] }} · {{ $contact['recorded_at'] }}</div>
-                    <div class="rpt-unit-body">
-                        <p class="rpt-unit-row">
-                            <strong>{{ __('Viatura acionada') }}:</strong> {{ $contact['vehicle'] }}
-                            @if ($contact['vehicle_base'] !== '—')
-                                <span style="color: #6b7280; font-size: 0.82em;">({{ $contact['vehicle_base'] }})</span>
-                            @endif
-                        </p>
-                        <p class="rpt-unit-row"><strong>{{ __('Método de contato') }}:</strong> {{ $contact['method'] }}</p>
-                        <p class="rpt-unit-row"><strong>{{ __('Número / ramal / link') }}:</strong> {{ $contact['details'] }}</p>
-                        @unless ($contact['successful'])
-                            <p class="rpt-unit-row"><strong>{{ __('Motivo') }}:</strong> {{ $contact['reason'] }}</p>
-                        @endunless
-                        <p class="rpt-unit-row"><strong>{{ __('Registrado por') }}:</strong> {{ $contact['actor'] }}</p>
-                    </div>
-                </div>
-            @endforeach
-        </section>
-    @endif
-
     <section class="rpt-section">
         <h2 class="rpt-section-head">{{ __('Viatura, turno e efetivo') }}</h2>
         @forelse ($document->dispatchUnits() as $unit)

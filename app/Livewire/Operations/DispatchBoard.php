@@ -11,11 +11,9 @@ use App\Domain\Operations\Actions\CancelIncidentAction;
 use App\Domain\Operations\Actions\CreateOperationalIncidentAction;
 use App\Domain\Operations\Actions\DispatchUnitAction;
 use App\Domain\Operations\Actions\FinalizeIncidentClosureAction;
-use App\Domain\Operations\Actions\RegisterDispatchContactAttemptAction;
 use App\Domain\Operations\Actions\ReleaseUnitAction;
 use App\Domain\Operations\DTOs\AdvanceDispatchStageDTO;
 use App\Domain\Operations\DTOs\CreateIncidentDTO;
-use App\Domain\Operations\DTOs\DispatchContactAttemptDTO;
 use App\Domain\Operations\DTOs\DispatchUnitDTO;
 use App\Domain\Operations\DTOs\FinalizeIncidentClosureDTO;
 use App\Domain\Operations\DTOs\ReleaseUnitDTO;
@@ -30,7 +28,6 @@ use App\Models\IncidentEvent;
 use App\Models\Municipio;
 use App\Models\Nature;
 use App\Models\Shift;
-use App\Models\Staff;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Support\Operations\DispatchFairQueueShiftSorter;
@@ -49,7 +46,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
@@ -68,20 +64,6 @@ final class DispatchBoard extends Component
     public ?int $modalVehicleId = null;
 
     public bool $dispatchModalIsSupport = false;
-
-    public string $dispatchContactMethod = '';
-
-    public string $dispatchContactDetails = '';
-
-    public bool $dispatchContactSuccessful = true;
-
-    public string $dispatchContactReason = '';
-
-    public const DISPATCH_CONTACT_METHODS = [
-        'ramal' => 'Ramal',
-        'telefone' => 'Telefone',
-        'whatsapp' => 'WhatsApp',
-    ];
 
     /** Encerramento: última viatura na base — escolher principal. */
     public bool $showClosureModal = false;
@@ -193,7 +175,6 @@ final class DispatchBoard extends Component
     public function openDispatchModal(int $incidentId, bool $support = false): void
     {
         $this->resetErrorBag();
-        $this->resetDispatchContactFields();
 
         /** @var Incident|null $incident */
         $incident = Incident::query()->with(['dispatches.shift.vehicle', 'municipio'])->find($incidentId);
@@ -238,51 +219,6 @@ final class DispatchBoard extends Component
         $this->dispatchingIncidentId = null;
         $this->modalVehicleId = null;
         $this->dispatchModalIsSupport = false;
-        $this->resetDispatchContactFields();
-    }
-
-    private function resetDispatchContactFields(): void
-    {
-        $this->dispatchContactMethod = '';
-        $this->dispatchContactDetails = '';
-        $this->dispatchContactSuccessful = true;
-        $this->dispatchContactReason = '';
-    }
-
-    private function resolveNearestDispatchShift(Incident $incident): ?Shift
-    {
-        $query = Shift::query()
-            ->with(['vehicle', 'staff'])
-            ->when(
-                $this->dispatchModalIsSupport,
-                fn ($q) => $q->operationalForDispatch(),
-                fn ($q) => $q->operationalAvailability(),
-            );
-
-        if ($incident->municipio_id !== null) {
-            $query->where('municipio_id', $incident->municipio_id);
-        }
-
-        return DispatchProximityShiftSorter::sort($query->get(), $incident)->first();
-    }
-
-    private function nearestVehiclePayload(?Shift $shift): ?array
-    {
-        if ($shift === null) {
-            return null;
-        }
-
-        return [
-            'shift_id' => $shift->id,
-            'vehicle_id' => $shift->vehicle_id,
-            'vehicle_prefix' => $shift->vehicle?->prefix,
-            'vehicle_plate' => $shift->vehicle?->plate,
-            'responsible_staff' => $shift->staff->map(fn (Staff $member) => [
-                'id' => $member->id,
-                'name' => $member->name,
-                'cargo' => $member->cargo,
-            ])->values()->all(),
-        ];
     }
 
     /** Reverb: qualquer evento operacional no canal operations.dispatch força re-render. */
@@ -305,30 +241,14 @@ final class DispatchBoard extends Component
         $this->boardMessage = __('Solicitação somada à ocorrência (#:id).', ['id' => $incidentId]);
     }
 
-    public function confirmDispatch(DispatchUnitAction $action, RegisterDispatchContactAttemptAction $registerContact): void
+    public function confirmDispatch(DispatchUnitAction $action): void
     {
         $this->resetErrorBag();
         $this->boardMessage = '';
 
-        $rules = [
-            'modalVehicleId' => ['required', 'integer'],
-            'dispatchContactMethod' => ['required', 'string', Rule::in(array_keys(self::DISPATCH_CONTACT_METHODS))],
-            'dispatchContactDetails' => ['required', 'string'],
-            'dispatchContactSuccessful' => ['boolean'],
-        ];
-
-        if (! $this->dispatchContactSuccessful) {
-            $rules['dispatchContactReason'] = ['required', 'string'];
-        }
-
         $this->validate(
-            $rules,
-            [
-                'modalVehicleId.required' => __('Selecione a viatura em turno.'),
-                'dispatchContactMethod.required' => __('Selecione o método de contato.'),
-                'dispatchContactDetails.required' => __('Informe os detalhes do contato.'),
-                'dispatchContactReason.required' => __('Informe o motivo quando o contato não for bem-sucedido.'),
-            ],
+            ['modalVehicleId' => ['required', 'integer']],
+            ['modalVehicleId.required' => __('Selecione a viatura em turno.')],
         );
 
         if ($this->dispatchingIncidentId === null) {
@@ -356,24 +276,6 @@ final class DispatchBoard extends Component
         }
 
         Gate::authorize('dispatchUnit', $incident);
-
-        $nearestShift = $this->resolveNearestDispatchShift($incident);
-        $registerContact->execute(new DispatchContactAttemptDTO(
-            incidentId: $incident->id,
-            vehicleId: $this->modalVehicleId,
-            contactMethod: $this->dispatchContactMethod,
-            contactDetails: $this->dispatchContactDetails,
-            successful: $this->dispatchContactSuccessful,
-            reason: $this->dispatchContactSuccessful ? null : $this->dispatchContactReason,
-            nearestVehicle: $this->nearestVehiclePayload($nearestShift),
-        ));
-
-        if (! $this->dispatchContactSuccessful) {
-            $this->boardMessage = __('Contato registrado. Viatura não empenhada e responsável pela viatura mais próxima foi acionado.');
-            $this->closeDispatchModal();
-
-            return;
-        }
 
         try {
             $action->execute(new DispatchUnitDTO(
@@ -1092,18 +994,6 @@ final class DispatchBoard extends Component
             ? NearestVehicleResolver::distancesByVehicleId($modalIncident)
             : collect();
 
-        // Sugestões de contato pré-despacho por viatura (base/município do turno selecionado).
-        $modalContactSuggestions = $modalShifts
-            ->filter(fn (Shift $shift) => $shift->vehicle_id !== null)
-            ->mapWithKeys(fn (Shift $shift) => [
-                (int) $shift->vehicle_id => [
-                    'ramal' => $shift->municipio?->dispatch_contact_ramal,
-                    'telefone' => $shift->municipio?->dispatch_contact_phone,
-                    'whatsapp' => $shift->municipio?->dispatch_contact_whatsapp,
-                ],
-            ])
-            ->all();
-
         $actionIncident = $this->actionIncidentId !== null
             ? Incident::query()
                 ->with(['nature', 'municipio', 'callRequests.creator'])
@@ -1182,7 +1072,6 @@ final class DispatchBoard extends Component
             'modalIncident' => $modalIncident,
             'modalShifts' => $modalShifts,
             'modalShiftDistances' => $modalShiftDistances,
-            'modalContactSuggestions' => $modalContactSuggestions,
             'kanbanDispatches' => $kanbanDispatches,
             'dispatchFireMeta' => $dispatchFireMeta,
             'dispatchUnseenNoteCounts' => $dispatchUnseenNoteCounts,

@@ -10,7 +10,6 @@ use App\Domain\Operations\Enums\StaffCargo;
 use App\Models\FireForestReport;
 use App\Models\Incident;
 use App\Models\IncidentDispatch;
-use App\Models\IncidentEvent;
 use App\Models\IncidentFinalReport;
 use App\Models\Municipio;
 use App\Models\Nature;
@@ -158,57 +157,6 @@ test('final report document shows outcome vehicle staff and fire behavior', func
         ->assertSee('Aceiro e abafamento.')
         ->assertSee('Alerta operacional — comportamento do fogo (sensor)')
         ->assertSee('SAT-FINAL-01');
-});
-
-test('final report document shows pre-dispatch contact attempts', function (): void {
-    $incident = createClosedFireForestIncidentForDocumentTests();
-
-    /** @var Vehicle $vehicle */
-    $vehicle = Vehicle::query()->where('municipio_id', $incident->municipio_id)->firstOrFail();
-
-    IncidentEvent::query()->create([
-        'municipio_id' => $incident->municipio_id,
-        'incident_id' => $incident->id,
-        'event_key' => 'dispatch_contact_failed',
-        'payload' => [
-            'vehicle_id' => $vehicle->id,
-            'contact_method' => 'telefone',
-            'contact_details' => '18988255800',
-            'successful' => false,
-            'reason' => 'Linha ocupada',
-        ],
-        'source' => 'web',
-        'recorded_at' => now()->subMinutes(10),
-    ]);
-
-    IncidentEvent::query()->create([
-        'municipio_id' => $incident->municipio_id,
-        'incident_id' => $incident->id,
-        'event_key' => 'dispatch_contact_attempted',
-        'payload' => [
-            'vehicle_id' => $vehicle->id,
-            'contact_method' => 'ramal',
-            'contact_details' => '1002',
-            'successful' => true,
-            'reason' => null,
-        ],
-        'source' => 'web',
-        'recorded_at' => now()->subMinutes(5),
-    ]);
-
-    /** @var User $nurse */
-    $nurse = User::query()->where('email', 'enfermeiro@example.com')->firstOrFail();
-
-    $this->actingAs($nurse)
-        ->get(route('operations.incidents.final-report.document', $incident))
-        ->assertOk()
-        ->assertSee('Contato pré-despacho')
-        ->assertSee('Contato efetuado')
-        ->assertSee('Não foi possível contatar')
-        ->assertSee('Ramal')
-        ->assertSee('1002')
-        ->assertSee('Linha ocupada')
-        ->assertSee($vehicle->prefix);
 });
 
 test('final report document download returns pdf attachment', function (): void {
